@@ -312,8 +312,13 @@ mix *= dip[:, None]
 # fondu final
 fo = int(0.5 * SR)
 mix[-fo:] *= np.linspace(1, 0, fo)[:, None] ** 2
-mix = np.tanh(mix * 1.2) / np.tanh(1.2)
-mix /= np.abs(mix).max() / 0.89
+mix /= np.abs(mix).max()
+mix = np.tanh(mix * 3.2) / np.tanh(3.2)
+for ch in range(2):
+    mix[:, ch] = fft_filter(mix[:, ch], 25, 16000)
+# normalisation sur le pic réel (suréchantillonné x4) à -2.5 dBTP
+true_peak = max(np.abs(np.fft.irfft(np.fft.rfft(mix[:, ch]), 4 * N)).max() * 4 for ch in range(2))
+mix *= 10 ** (-2.5 / 20) / true_peak
 
 out = sys.argv[1] if len(sys.argv) > 1 else 'soundtrack.wav'
 with wave.open(out, 'wb') as w:
